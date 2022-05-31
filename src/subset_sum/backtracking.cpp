@@ -1,61 +1,42 @@
-#include "assignment/subset_sum/backtracking.hpp"
+#include "assignment/subset_sum/bit_masking.hpp"
 
 #include <cassert>  // assert
-#include <numeric>  // accumulate
 
-#include "assignment/bits.hpp"  // set_bit, mask2indices
+#include "assignment/bits.hpp"  // is_bit_set, mask2indices
 
 namespace assignment {
 
-  std::vector<std::vector<int>> SubsetSumBacktracking::search(const std::vector<int>& set, int target_sum) const {
+  std::vector<std::vector<int>> SubsetSumBitMasking::search(const std::vector<int>& set, int target_sum) const {
     assert(target_sum > 0 && set.size() <= 16);
 
-    auto indices = std::vector<std::vector<int>>();
+    std::vector<std::vector<int>> indices;
 
-    // подсчитываем сумму всех элементов во множестве
-    const int residual = std::accumulate(set.begin(), set.end(), 0);
+    const auto num_elems = static_cast<int>(set.size());  // N
+    const int num_subsets = 1 << num_elems;               // 2^N
 
-    // вызов вспомогательной функции: обратите внимание на начальные значения индекса, маски и суммы
-    search(set, -1, 0, 0, residual, target_sum, indices);
-
+    // 1. Внешний цикл: пробегаемся по всем битовым маскам от 0..00 до 1..11
+    for (int i =0; i < num_subsets; i++) {
+      std::vector<int> array;
+      // 2. Внутренний цикл: проверка разрядов битовой маски и генерация подмножества, ассоциирующегося с этой маской
+      for (int j =0; j < num_elems; j++){
+        if (is_bit_set(i,j)){
+          array.push_back(j);
+        }
+      }
+      // 3. Подсчет суммы текущего подмножества, сохранение индексов подмножества с целевой суммой в результат
+      int sum = 0;
+      for (int k = 0; k < array.size(); k++){
+        sum += set[array[k]];
+        // Tips: можно пропустить итерацию, если сумма текущего подмножества стала больше целевой суммы
+        if (sum > target_sum){
+          break;
+        }
+      }
+      if (sum == target_sum){
+        indices.push_back(array);
+      }
+    }
     return indices;
-  }
-
-  void SubsetSumBacktracking::search(const std::vector<int>& set, int index, int mask, int sum, int residual,
-                                     int target_sum, std::vector<std::vector<int>>& indices) const {
-
-    assert(index >= -1 && mask >= 0 && sum >= 0 && residual >= 0 && target_sum > 0);
-
-    // Ограничение 0: вышли за пределы множества
-    if (index == static_cast<int>(set.size())) {
-      return;
-    }
-
-    // Ограничение 1: текущая сумма должна быть меньше целевой
-    if (true /* ... */) {
-      // если превысили целевую сумму, то сделать ее меньше уже не получится (все элементы множества положительные)
-      return;
-    }
-
-    // Ограничение 2: "остаточная сумма" + "текущая сумма" должны быть больше или равны "целевой сумме"
-    if (true /* ... */) {
-      // сумму невозможно будет набрать с оставшимися элементами множества
-      return;
-    }
-
-    // если найдено подмножество с целевой суммой, то сохраняем в результат это подмножество
-    if (sum == target_sum) {
-      // ... сохранение в результат
-      // ... нужно ли в этой ветке рекурсии рассматривать следующие элементы?
-    }
-
-    // рассматриваем следующий элемент
-    index += 1;
-
-    // обновляется несмотря на включение/исключение элемента => почему?
-    residual -= set[index];
-
-    // рекурсивный вызов со включением/исключением элемента с текущим индексом ...
   }
 
 }  // namespace assignment
